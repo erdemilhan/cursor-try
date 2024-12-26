@@ -1,18 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
   const [amount, setAmount] = useState<string>('');
   const [result, setResult] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [rate, setRate] = useState<number | null>(null);
 
-  // This rate should ideally come from an API
-  const AED_TO_TL_RATE = 8.32; // Example rate (you should use real-time rates)
+  // Add this useEffect to fetch the rate when component mounts
+  useEffect(() => {
+    fetchRate();
+  }, []);
+
+  const fetchRate = async () => {
+    try {
+      const response = await fetch('/api/exchange-rate');
+      const data = await response.json();
+      setRate(data.rate);
+    } catch (error) {
+      console.error('Failed to fetch rate:', error);
+    }
+  };
 
   const handleConvert = () => {
     const numAmount = parseFloat(amount);
-    if (!isNaN(numAmount)) {
-      const converted = numAmount * AED_TO_TL_RATE;
+    if (!isNaN(numAmount) && rate) {
+      const converted = numAmount * rate;
       setResult(converted);
     }
   };
@@ -49,6 +63,9 @@ export default function Home() {
             <div className="mt-4 p-4 bg-gray-100 rounded-md">
               <p className="text-center text-black">
                 {amount} AED = {result.toFixed(2)} TL
+              </p>
+              <p className="text-center text-sm text-gray-600 mt-2">
+                Current rate: 1 AED = {rate?.toFixed(4)} TL
               </p>
             </div>
           )}
